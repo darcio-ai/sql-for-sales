@@ -121,9 +121,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               {children}
             </div>
           </div>
-          <div className="mt-8 border-t border-border pt-3">
+          <div className="mt-8 flex flex-col gap-2 border-t border-border pt-3">
+            <InstallButton />
             <ReseedButton />
           </div>
+
         </main>
 
         <aside className="hidden lg:block">
