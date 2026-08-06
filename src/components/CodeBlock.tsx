@@ -1,16 +1,23 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Play, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { setEditorSql } from "@/lib/progress";
+import { setActiveLesson, setEditorSql } from "@/lib/progress";
 
 type Props = {
   code: string;
   variant?: "default" | "error";
   showRun?: boolean;
   showCopy?: boolean;
+  lessonId?: string;
 };
 
-export function CodeBlock({ code, variant = "default", showRun = true, showCopy = false }: Props) {
+export function CodeBlock({
+  code,
+  variant = "default",
+  showRun = true,
+  showCopy = false,
+  lessonId,
+}: Props) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
 
@@ -30,8 +37,9 @@ export function CodeBlock({ code, variant = "default", showRun = true, showCopy 
               type="button"
               className="btn btn-ghost"
               onClick={() => {
+                if (lessonId) setActiveLesson(lessonId);
                 setEditorSql(code);
-                navigate({ to: "/pratica" });
+                void navigate({ to: "/pratica" });
               }}
             >
               <Play size={13} /> Rodar no editor

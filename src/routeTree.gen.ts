@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReferenciaRouteImport } from './routes/referencia'
+import { Route as LicaoIdRouteImport } from './routes/licao.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReferenciaRoute = ReferenciaRouteImport.update({
+  id: '/referencia',
+  path: '/referencia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LicaoIdRoute = LicaoIdRouteImport.update({
+  id: '/licao/$id',
+  path: '/licao/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/referencia': typeof ReferenciaRoute
+  '/licao/$id': typeof LicaoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/referencia': typeof ReferenciaRoute
+  '/licao/$id': typeof LicaoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/referencia': typeof ReferenciaRoute
+  '/licao/$id': typeof LicaoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/referencia' | '/licao/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/referencia' | '/licao/$id'
+  id: '__root__' | '/' | '/referencia' | '/licao/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ReferenciaRoute: typeof ReferenciaRoute
+  LicaoIdRoute: typeof LicaoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +68,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/referencia': {
+      id: '/referencia'
+      path: '/referencia'
+      fullPath: '/referencia'
+      preLoaderRoute: typeof ReferenciaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/licao/$id': {
+      id: '/licao/$id'
+      path: '/licao/$id'
+      fullPath: '/licao/$id'
+      preLoaderRoute: typeof LicaoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ReferenciaRoute: ReferenciaRoute,
+  LicaoIdRoute: LicaoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
