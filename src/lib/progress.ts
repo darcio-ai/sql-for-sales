@@ -5,6 +5,7 @@ export type LessonState = "nao_iniciada" | "resolvida" | "resolvida_com_gabarito
 type Entry = { estado: LessonState; query: string };
 type Store = Record<string, Entry>;
 
+const EMPTY: Store = {};
 const KEY = "sqlvende:progress";
 const EDITOR_KEY = "sqlvende:editor";
 
@@ -50,7 +51,7 @@ export function useProgress(): Store {
       load();
       return store;
     },
-    () => ({}) as Store,
+    () => EMPTY,
   );
 }
 
