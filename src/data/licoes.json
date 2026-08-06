@@ -1,0 +1,590 @@
+[
+  {
+    "id": "L01",
+    "bloco": 1,
+    "bloco_nome": "Ler o dado",
+    "titulo": "De onde o dado vem",
+    "pergunta_negocio": "Quais negócios existem na base?",
+    "duracao_min": 20,
+    "conceito": "Um banco de dados é um conjunto de tabelas. Tabela é planilha: cada **linha** é um registro (um negócio, uma empresa, um vendedor) e cada **coluna** é um atributo desse registro (o valor, a etapa, a data de criação).\n\nA tabela `deals` tem 900 linhas. Cada linha é um negócio.\n\nUma query é uma pergunta feita a uma ou mais tabelas. E toda resposta volta no mesmo formato: outra tabela. Isso é importante e vai voltar na lição 12: o resultado de uma query pode virar a entrada de outra.\n\nVocê não precisa memorizar nada nesta lição. Precisa entender que existe um lugar de onde o dado vem e uma lista do que você quer ver dele.",
+    "sintaxe": {
+      "codigo": "select deal_name, amount\nfrom deals;",
+      "explicacao": "Duas peças e um ponto e vírgula.\n\n`from deals` diz **de onde** o dado vem. Sem isso a query não tem sobre o que perguntar.\n\n`select deal_name, amount` diz **o que mostrar**. As colunas vêm separadas por vírgula, e aparecem no resultado na ordem em que você escreveu.\n\nO `;` encerra o comando. Alguns editores perdoam a falta dele, outros não. Acostume-se a colocar."
+    },
+    "inversao": {
+      "titulo": "Escreve SELECT primeiro, pensa FROM primeiro",
+      "texto": "A ordem em que você digita não é a ordem em que você deve raciocinar.\n\nSempre decida **de onde vem o dado** antes de decidir **o que exibir**. Quem tenta pensar pelo `select` trava, porque está escolhendo colunas sem ter fixado a tabela.\n\nEssa inversão parece detalhe e resolve metade dos travamentos de quem está começando. Ela volta com força na lição 7, quando entram duas tabelas."
+    },
+    "variacao": {
+      "codigo": "select *\nfrom deals;",
+      "explicacao": "O `*` traz **todas** as colunas.\n\nServe para explorar uma tabela que você não conhece: você roda, olha o que tem e descobre os nomes das colunas.\n\nEm query de verdade, evite. Ele traz peso desnecessário e esconde a sua intenção. Query com `select *` não deixa claro o que você queria saber, e daqui a um mês nem você lembra."
+    },
+    "erro_classico": {
+      "codigo": "select valor\nfrom deals;",
+      "mensagem": "ERROR:  column \"valor\" does not exist\nLINE 1: select valor from deals;\n               ^",
+      "explicacao": "As colunas desta base têm nome em inglês: `amount`, `stage`, `source`, `status`. É a convenção de HubSpot e Salesforce, e é o que você vai encontrar no mercado.\n\nRepare em duas coisas na mensagem. Primeiro, o Postgres diz **exatamente** qual palavra ele não reconheceu. Segundo, a setinha `^` aponta a posição no texto.\n\nA mensagem de erro do Postgres é o melhor professor que você tem nesta trilha. Leia ela inteira, sempre. Ela quase nunca é vaga."
+    },
+    "exercicio": {
+      "enunciado": "Traga o nome e a etapa de todos os negócios. As colunas são `deal_name` e `stage`, na tabela `deals`.",
+      "dica": "Duas peças. Comece decidindo o `from`.",
+      "gabarito": "select deal_name, stage\nfrom deals;",
+      "resultado_esperado": "900 linhas, 2 colunas."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Descubra quais colunas existem na tabela `companies`.",
+        "gabarito": "select * from companies;"
+      },
+      {
+        "enunciado": "Traga o nome e o time de todos os vendedores (tabela `owners`, colunas `owner_name` e `team`).",
+        "gabarito": "select owner_name, team from owners;"
+      }
+    ]
+  },
+  {
+    "id": "L02",
+    "bloco": 1,
+    "bloco_nome": "Ler o dado",
+    "titulo": "Recortar o que interessa",
+    "pergunta_negocio": "Quais negócios estão abertos acima de dez mil reais?",
+    "duracao_min": 30,
+    "conceito": "Trazer 900 linhas não é análise. Análise começa quando você recorta.\n\nO `WHERE` é o filtro de **linhas**. Ele roda uma vez para cada linha da tabela e faz uma pergunta de sim ou não: esta linha entra no resultado?\n\nA diferença entre `SELECT` e `WHERE` confunde no começo, então fixe assim: o `SELECT` escolhe **colunas**, o `WHERE` escolhe **linhas**. Um corta na vertical, o outro na horizontal.",
+    "sintaxe": {
+      "codigo": "select deal_name, amount, stage\nfrom deals\nwhere status = 'open';",
+      "explicacao": "`where status = 'open'` mantém só as linhas em que a coluna `status` vale exatamente `open`.\n\n**Texto sempre entre aspas simples.** `'open'` com aspas simples é o texto. Sem aspas, o Postgres acha que é o nome de uma coluna.\n\nNúmero vai sem aspas: `where amount > 10000`.\n\nOs comparadores são os que você já conhece: `=` igual, `<>` diferente, `>` maior, `<` menor, `>=` e `<=`."
+    },
+    "variacao": {
+      "codigo": "select deal_name, amount\nfrom deals\nwhere status = 'open'\n  and amount > 10000;",
+      "explicacao": "Duas condições com `and`: a linha só entra se as **duas** forem verdadeiras.\n\nCom `or`, basta **uma** ser verdadeira.\n\nMisturar os dois exige parênteses, e a falta deles é fonte de relatório errado que ninguém percebe:\n\n`where status = 'open' and (source = 'Inbound' or source = 'Indicacao')`\n\nSem os parênteses, o Postgres lê como \"aberto e inbound\" **ou** \"indicação de qualquer status\", que é outra pergunta.\n\nPara vários valores da mesma coluna, `in` é mais limpo que uma fila de `or`:\n\n`where source in ('Inbound', 'Indicacao')`\n\nPara intervalo, `between` inclui as duas pontas:\n\n`where amount between 10000 and 50000`\n\nPara texto parcial sem diferenciar maiúscula, `ilike` com `%` como curinga:\n\n`where company_name ilike '%prime%'`"
+    },
+    "erro_classico": {
+      "codigo": "select *\nfrom deals\nwhere stage = \"Proposta\";",
+      "mensagem": "ERROR:  column \"Proposta\" does not exist\nLINE 1: select * from deals where stage = \"Proposta\";\n                                          ^",
+      "explicacao": "Aspas duplas em vez de simples.\n\nNo Postgres as duas aspas fazem coisas **diferentes**, e essa é uma das confusões mais comuns de quem vem de Excel ou de outra linguagem:\n\n- aspas simples `'Proposta'` = um valor de texto\n- aspas duplas `\"Proposta\"` = o nome de uma coluna\n\nPor isso a mensagem diz que a coluna Proposta não existe. O Postgres entendeu que você estava comparando a coluna `stage` com outra coluna chamada Proposta.\n\nRegra prática: em SQL, texto é **sempre** aspas simples."
+    },
+    "exercicio": {
+      "enunciado": "Liste as empresas da Paraíba. A tabela é `companies`, a coluna é `state` e o valor é `PB`. Traga o nome da empresa (`company_name`) e a cidade (`city`).",
+      "dica": "Uma condição só. Atenção ao tipo de aspas.",
+      "gabarito": "select company_name, city\nfrom companies\nwhere state = 'PB';",
+      "resultado_esperado": "49 linhas."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Negócios com valor acima de 30 mil, mostrando nome, valor e origem.",
+        "gabarito": "select deal_name, amount, source from deals where amount > 30000;"
+      },
+      {
+        "enunciado": "Empresas da Paraíba com porte 50-199 ou 200+ (coluna `size_band`).",
+        "gabarito": "select company_name, size_band from companies where state = 'PB' and size_band in ('50-199','200+');"
+      },
+      {
+        "enunciado": "Quantas empresas têm 'prime' no nome, sem diferenciar maiúscula de minúscula.",
+        "gabarito": "select * from companies where company_name ilike '%prime%';"
+      }
+    ]
+  },
+  {
+    "id": "L03",
+    "bloco": 1,
+    "bloco_nome": "Ler o dado",
+    "titulo": "O vazio que não é zero",
+    "pergunta_negocio": "Quantos negócios estão sem valor preenchido no CRM?",
+    "duracao_min": 30,
+    "conceito": "Esta é a lição mais importante do bloco, e a que mais gera relatório errado no mundo corporativo.\n\n`NULL` não é zero. `NULL` não é texto vazio. `NULL` é **ausência de informação**: o campo nunca foi preenchido.\n\nA consequência é contraintuitiva. Em SQL, qualquer comparação com `NULL` não devolve verdadeiro nem falso: devolve **desconhecido**. E linha desconhecida não entra no resultado.\n\nPense assim: se você não sabe o valor de um negócio, você também não sabe se ele é maior que cinco mil. Nem se ele é igual a cinco mil. Nem se ele é diferente de cinco mil. Você simplesmente não sabe.\n\nÉ por isso que `where amount <> 5000` **exclui** os negócios sem valor, mesmo que a intenção fosse trazer todos que não valem cinco mil. Nesta base, 56 dos 900 negócios estão sem valor. Eles somem silenciosamente e ninguém avisa.",
+    "sintaxe": {
+      "codigo": "select count(*)\nfrom deals\nwhere amount is null;",
+      "explicacao": "Para perguntar sobre ausência, existe um operador próprio: `is null`.\n\nE o oposto, `is not null`.\n\nNão existe `= null`. Nem `<> null`. A sintaxe até é aceita, mas nunca retorna nada, o que é pior que dar erro."
+    },
+    "variacao": {
+      "codigo": "select deal_name, amount\nfrom deals\nwhere status = 'open'\norder by amount desc nulls last\nlimit 10;",
+      "explicacao": "Três coisas novas aqui.\n\n`order by amount desc` ordena do maior para o menor. Sem o `desc`, o padrão é do menor para o maior.\n\n`nulls last` manda os nulos para o fim. Isso importa: no Postgres, em ordem decrescente, os nulos vão para o **topo** por padrão. Sem esse ajuste, os dez maiores negócios da sua lista seriam dez negócios sem valor preenchido.\n\n`limit 10` corta em dez linhas. Sempre depois do `order by`, senão você limita antes de ordenar e traz dez linhas quaisquer."
+    },
+    "erro_classico": {
+      "codigo": "select count(*)\nfrom deals\nwhere amount = null;",
+      "mensagem": "count\n-------\n     0",
+      "explicacao": "Este é o erro mais perigoso da trilha inteira, porque **não dá erro**.\n\nA query roda, devolve zero e parece uma resposta legítima. Você conclui que não há negócio sem valor, quando na verdade há 56.\n\nÉ assim que relatório errado chega em reunião: não com mensagem vermelha, mas com um número plausível.\n\nSempre que uma contagem vier zero e você esperava algo, desconfie de `NULL` antes de qualquer outra coisa."
+    },
+    "exercicio": {
+      "enunciado": "Descubra quantos negócios estão sem valor preenchido. A coluna é `amount` na tabela `deals`. Use `count(*)` para contar as linhas.",
+      "dica": "Não use igual. Existe um operador próprio para ausência.",
+      "gabarito": "select count(*)\nfrom deals\nwhere amount is null;",
+      "resultado_esperado": "56"
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Os 10 negócios abertos de maior valor, com os sem valor aparecendo por último e não sumindo.",
+        "gabarito": "select deal_id, deal_name, amount, stage from deals where status = 'open' order by amount desc nulls last limit 10;"
+      },
+      {
+        "enunciado": "Contatos sem email cadastrado (tabela `contacts`, coluna `email`).",
+        "gabarito": "select count(*) from contacts where email is null;"
+      },
+      {
+        "enunciado": "Negócios fechados: aqueles em que `closed_at` foi preenchido.",
+        "gabarito": "select count(*) from deals where closed_at is not null;"
+      }
+    ]
+  },
+  {
+    "id": "L04",
+    "bloco": 2,
+    "bloco_nome": "Agregar",
+    "titulo": "De lista para número",
+    "pergunta_negocio": "Qual a receita total ganha e o ticket médio?",
+    "duracao_min": 25,
+    "conceito": "Até aqui toda query devolvia uma lista. Ninguém apresenta lista de 900 linhas numa reunião. Apresenta número.\n\nFunção de agregação é o que transforma muitas linhas em uma. Você entrega uma coluna inteira para ela e recebe um valor de volta.\n\nSão cinco, e você já conhece todas do Excel:\n\n- `count()` conta linhas\n- `sum()` soma\n- `avg()` média\n- `min()` menor valor\n- `max()` maior valor\n\nO detalhe que separa quem entende de quem chuta: **todas elas ignoram `NULL` silenciosamente**, exceto `count(*)`. Isso é continuação direta da lição anterior e tem consequência prática imediata.",
+    "sintaxe": {
+      "codigo": "select count(*) as negocios,\n       sum(amount) as receita,\n       round(avg(amount), 2) as ticket_medio\nfrom deals\nwhere status = 'won';",
+      "explicacao": "Três agregações na mesma query, com o filtro `where` aplicado antes.\n\n`as negocios` dá nome à coluna do resultado. Sem isso, o Postgres nomeia como `count`, `sum`, o que fica ilegível quando há várias.\n\n`round(avg(amount), 2)` arredonda em duas casas. Média sem arredondar sai com quinze dígitos e ninguém consegue ler."
+    },
+    "variacao": {
+      "codigo": "select count(*) as total_linhas,\n       count(amount) as com_valor,\n       count(*) - count(amount) as sem_valor\nfrom deals;",
+      "explicacao": "Aqui está a armadilha, e ela vale entender de verdade.\n\n`count(*)` conta **linhas**. Devolve 900.\n\n`count(amount)` conta **valores não nulos daquela coluna**. Devolve 844.\n\nA diferença são os 56 negócios sem valor.\n\nA mesma lógica atinge o `avg()`. A média de `amount` é calculada sobre 844 negócios, não sobre 900. Na maioria das vezes é o que você quer. Mas se alguém pergunta \"qual o ticket médio dos nossos negócios\" e você responde sem saber que 56 ficaram de fora, você respondeu outra pergunta.\n\nPara contar valores distintos, existe `count(distinct coluna)`. Ele conta quantos valores diferentes existem, não quantas linhas."
+    },
+    "erro_classico": {
+      "codigo": "select avg(amount)\nfrom deals;",
+      "mensagem": "Roda sem erro e devolve um número. O problema não é a query, é a interpretação.",
+      "explicacao": "Esta média está calculada sobre 844 negócios, não 900. E mistura ganhos, perdidos e abertos, que são realidades diferentes.\n\nNão é erro de sintaxe. É erro de pergunta.\n\nAntes de entregar qualquer média, responda duas coisas: **sobre quantas linhas** ela foi calculada, e se essas linhas são comparáveis entre si. Média de coisas diferentes não significa nada."
+    },
+    "exercicio": {
+      "enunciado": "Para os negócios ganhos (`status = 'won'`), traga a quantidade, a receita total e o ticket médio arredondado em duas casas.",
+      "dica": "Três agregações, um filtro. Dê nome a cada coluna com `as`.",
+      "gabarito": "select count(*) as negocios,\n       sum(amount) as receita,\n       round(avg(amount), 2) as ticket_medio\nfrom deals\nwhere status = 'won';",
+      "resultado_esperado": "164 negócios ganhos."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Menor e maior valor entre os negócios ganhos.",
+        "gabarito": "select min(amount), max(amount) from deals where status = 'won';"
+      },
+      {
+        "enunciado": "Quantas cidades distintas existem na tabela de empresas.",
+        "gabarito": "select count(distinct city) from companies;"
+      },
+      {
+        "enunciado": "Compare count(*) com count(closed_at) na tabela deals e explique a diferença.",
+        "gabarito": "select count(*), count(closed_at) from deals;"
+      }
+    ]
+  },
+  {
+    "id": "L05",
+    "bloco": 2,
+    "bloco_nome": "Agregar",
+    "titulo": "O mesmo número, quebrado por categoria",
+    "pergunta_negocio": "Quanto tem em cada etapa do pipeline?",
+    "duracao_min": 35,
+    "conceito": "Receita total é um número. Receita **por segmento** é uma análise.\n\n`GROUP BY` é o que faz essa quebra. Ele junta as linhas que têm o mesmo valor numa coluna e aplica a agregação dentro de cada grupo separadamente.\n\nSe você agrupa por `stage`, o Postgres separa os 900 negócios em pilhas, uma para cada etapa, e conta cada pilha. O resultado tem uma linha por etapa.\n\nA regra que o Postgres não perdoa: **toda coluna do `SELECT` precisa estar no `GROUP BY` ou dentro de uma função de agregação.** Sem exceção.\n\nO motivo é lógico, não burocrático. Se você agrupou 240 negócios numa pilha e pede para mostrar o `deal_name`, qual dos 240 nomes ele deveria mostrar? Não existe resposta, então ele recusa.",
+    "sintaxe": {
+      "codigo": "select stage,\n       count(*) as quantidade,\n       sum(amount) as valor\nfrom deals\nwhere status = 'open'\ngroup by stage\norder by valor desc;",
+      "explicacao": "Leia na ordem em que o banco executa, que não é a ordem em que você escreve:\n\n1. `from deals` pega a tabela\n2. `where status = 'open'` descarta as linhas que não interessam\n3. `group by stage` empilha o que sobrou, uma pilha por etapa\n4. `select` calcula a contagem e a soma dentro de cada pilha\n5. `order by` ordena o resultado final\n\nEntender essa ordem resolve a próxima confusão sozinho."
+    },
+    "variacao": {
+      "codigo": "select source,\n       count(*) as total\nfrom deals\ngroup by source\nhaving count(*) < 50;",
+      "explicacao": "`HAVING` filtra **grupos**, depois de agregar. `WHERE` filtra **linhas**, antes de agregar.\n\nEsta query pergunta quais origens têm menos de 50 negócios no total. Isso só é possível saber depois de contar, ou seja, depois do agrupamento. Por isso `having`.\n\nA regra prática que resolve na hora: se a condição usa uma função de agregação, ela vai no `having`. Se não usa, vai no `where`.\n\nE prefira o `where` sempre que der. Ele descarta linhas antes de agrupar, o que é mais rápido."
+    },
+    "erro_classico": {
+      "codigo": "select source, stage, count(*)\nfrom deals\ngroup by source;",
+      "mensagem": "ERROR:  column \"deals.stage\" must appear in the GROUP BY clause or be used in an aggregate function\nLINE 1: select source, stage, count(*) from deals group by source;\n                       ^",
+      "explicacao": "Este é o erro que você mais vai ver nesta trilha, e a mensagem já entrega a solução.\n\nVocê agrupou só por `source`, mas pediu `stage` no resultado. Dentro do grupo Inbound existem negócios em várias etapas, então não há um `stage` único para mostrar.\n\nDuas saídas, e elas respondem perguntas diferentes:\n\n- `group by source, stage` cria uma linha para cada combinação de origem e etapa\n- tirar `stage` do select mantém uma linha por origem\n\nDecida qual pergunta você queria fazer, e não qual erro você queria calar.\n\nExiste um segundo erro irmão deste: usar `count(*)` dentro do `where`. O Postgres responde `aggregate functions are not allowed in WHERE`. É o caso de trocar por `having`."
+    },
+    "exercicio": {
+      "enunciado": "Monte o pipeline aberto por etapa: quantidade de negócios e valor total em cada etapa, ordenado do maior valor para o menor. Filtre por `status = 'open'` e agrupe por `stage`.",
+      "dica": "Filtre antes de agrupar. Dê nome à coluna de soma para conseguir ordenar por ela.",
+      "gabarito": "select stage,\n       count(*) as quantidade,\n       sum(amount) as valor\nfrom deals\nwhere status = 'open'\ngroup by stage\norder by valor desc;",
+      "resultado_esperado": "5 linhas, uma por etapa aberta."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Quantidade de empresas por segmento.",
+        "gabarito": "select segment, count(*) from companies group by segment order by 2 desc;"
+      },
+      {
+        "enunciado": "Receita ganha por vendedor, apenas para quem tem 20 ou mais negócios ganhos.",
+        "gabarito": "select owner_id, count(*), sum(amount) from deals where status = 'won' group by owner_id having count(*) >= 20 order by 3 desc;"
+      },
+      {
+        "enunciado": "Quantidade de negócios por status.",
+        "gabarito": "select status, count(*) from deals group by status order by 2 desc;"
+      }
+    ]
+  },
+  {
+    "id": "L06",
+    "bloco": 2,
+    "bloco_nome": "Agregar",
+    "titulo": "Taxa de conversão numa query só",
+    "pergunta_negocio": "De qual origem vem o lead que fecha?",
+    "duracao_min": 35,
+    "conceito": "Esta é a primeira query que vale mostrar numa entrevista.\n\nO problema: para calcular taxa de conversão você precisa de dois números na mesma linha, o total e os ganhos. Mas `count(*)` conta tudo e o `where` filtraria a query inteira, matando o total.\n\nA solução é o `FILTER`. Ele aplica um filtro **dentro** de uma agregação específica, sem afetar as outras da mesma query.\n\nÉ o operador que transforma agregação em análise, e a maioria dos cursos de SQL sequer menciona.",
+    "sintaxe": {
+      "codigo": "select source,\n       count(*) as total,\n       count(*) filter (where status = 'won') as ganhos\nfrom deals\ngroup by source;",
+      "explicacao": "Duas contagens sobre o mesmo grupo, com regras diferentes.\n\n`count(*)` conta todos os negócios daquela origem.\n\n`count(*) filter (where status = 'won')` conta só os ganhos, dentro do mesmo grupo.\n\nO `filter` funciona com qualquer agregação, não só com `count`. `sum(amount) filter (where status = 'won')` dá a receita ganha ao lado da receita total."
+    },
+    "variacao": {
+      "codigo": "select source,\n       count(*) as total,\n       count(*) filter (where status = 'won') as ganhos,\n       round(100.0 * count(*) filter (where status = 'won') / count(*), 1) as taxa_pct\nfrom deals\ngroup by source\norder by taxa_pct desc;",
+      "explicacao": "Agora a divisão, e aqui mora uma armadilha que vale por si só.\n\n**Repare no `100.0` com casa decimal.** Não é estética.\n\nNo Postgres, inteiro dividido por inteiro devolve inteiro, com a parte decimal cortada fora. `164 / 900` dá **zero**, não 0,18.\n\nO `100.0` força o cálculo a ser decimal, e aí a divisão funciona.\n\nA regra: sempre que estiver calculando percentual, multiplique por `100.0` e não por `100`. Sempre.\n\nRodando isso na base, o resultado mostra Indicação em 41,8% e Outbound em 10,0%. Essa diferença é o tipo de achado que muda alocação de time."
+    },
+    "erro_classico": {
+      "codigo": "select count(*) filter (where status = 'won') / count(*) as taxa\nfrom deals;",
+      "mensagem": "taxa\n------\n    0",
+      "explicacao": "Zero. E de novo, **sem mensagem de erro**.\n\n164 dividido por 900 é 0,18. Mas como os dois são inteiros, o Postgres corta a parte decimal e entrega 0.\n\nQuem não sabe disso conclui que a taxa de conversão é zero e vai atrás de um bug que não existe.\n\nA correção é multiplicar por `100.0` antes de dividir. Com o `100.0` na frente, o cálculo vira decimal e o resultado sai 18,2.\n\nGuarde este padrão inteiro, você vai usar dezenas de vezes:\n\n`round(100.0 * numerador / denominador, 1)`"
+    },
+    "exercicio": {
+      "enunciado": "Monte a tabela de taxa de ganho por origem: para cada `source`, mostre o total de negócios, quantos foram ganhos e a taxa de ganho em percentual com uma casa decimal. Ordene da maior taxa para a menor.",
+      "dica": "Duas contagens com FILTER, e não esqueça do 100.0.",
+      "gabarito": "select source,\n       count(*) as total,\n       count(*) filter (where status = 'won') as ganhos,\n       round(100.0 * count(*) filter (where status = 'won') / count(*), 1) as taxa_pct\nfrom deals\ngroup by source\norder by taxa_pct desc;",
+      "resultado_esperado": "5 origens. A primeira colocada passa de 40%, a última fica em 10%."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Mesma análise, mas por vendedor (`owner_id`) em vez de origem.",
+        "gabarito": "select owner_id, count(*) total, count(*) filter (where status='won') ganhos, round(100.0*count(*) filter (where status='won')/count(*),1) taxa from deals group by owner_id order by taxa desc;"
+      },
+      {
+        "enunciado": "Por origem: receita total ganha e quantos negócios seguem abertos.",
+        "gabarito": "select source, sum(amount) filter (where status='won') receita_ganha, count(*) filter (where status='open') abertos from deals group by source;"
+      },
+      {
+        "enunciado": "Olhe o resultado do exercício principal. Alguma origem tem amostra pequena demais para você confiar na taxa?",
+        "gabarito": "select source, count(*) from deals group by source having count(*) < 50;"
+      }
+    ]
+  },
+  {
+    "id": "L07",
+    "bloco": 3,
+    "bloco_nome": "Juntar tabelas",
+    "titulo": "Quando a resposta está em duas tabelas",
+    "pergunta_negocio": "Qual segmento de cliente gera mais receita?",
+    "duracao_min": 40,
+    "conceito": "A tabela `deals` sabe o valor e o status de cada negócio. Ela **não** sabe o segmento da empresa, nem o porte, nem a cidade. Isso está em `companies`.\n\nPara responder \"qual segmento gera mais receita\", você precisa das duas ao mesmo tempo.\n\nO que liga uma à outra é a coluna `company_id`, que existe nas duas. Ela é a **chave**: em `companies` identifica a empresa, e em `deals` diz a qual empresa aquele negócio pertence.\n\n`JOIN` é a operação que casa as linhas usando essa chave. Para cada negócio, ele vai até `companies`, encontra a empresa correspondente e cola as colunas dela ao lado.\n\nEssa é a lição que mais assusta e é mais simples do que parece: você está dizendo qual coluna de uma tabela corresponde a qual coluna da outra.",
+    "sintaxe": {
+      "codigo": "select c.segment,\n       count(*) as negocios,\n       sum(d.amount) as receita\nfrom deals d\njoin companies c on c.company_id = d.company_id\nwhere d.status = 'won'\ngroup by c.segment\norder by receita desc;",
+      "explicacao": "Três coisas novas.\n\n**Apelido de tabela.** `from deals d` dá o apelido `d` para `deals`, e `join companies c` dá `c` para `companies`. Daí em diante você escreve `d.amount` e `c.segment`. Isso deixa claro de qual tabela vem cada coluna e evita ambiguidade.\n\n**A condição do join.** `on c.company_id = d.company_id` é a regra de casamento. É a parte que você precisa acertar, e o resto é consequência.\n\n**A ordem de raciocínio da lição 1 volta aqui.** Primeiro decida quais tabelas e como elas se ligam. Só depois escolha as colunas. Quem tenta pelo `select` se perde."
+    },
+    "variacao": {
+      "codigo": "select c.size_band,\n       o.team,\n       count(*) as negocios,\n       round(avg(d.amount), 0) as ticket\nfrom deals d\njoin companies c on c.company_id = d.company_id\njoin owners o on o.owner_id = d.owner_id\nwhere d.status = 'won'\ngroup by c.size_band, o.team\norder by c.size_band;",
+      "explicacao": "Três tabelas. O padrão é o mesmo, repetido.\n\n`deals` continua sendo o centro, e cada `join` traz uma tabela satélite. `companies` traz o porte do cliente, `owners` traz o time do vendedor.\n\nO `group by` com duas colunas cria uma linha para **cada combinação** de porte e time.\n\nUm join não precisa parar em duas ou três tabelas. Mas se você está juntando cinco, vale parar e perguntar se a pergunta está clara na sua cabeça."
+    },
+    "erro_classico": {
+      "codigo": "select company_id\nfrom deals\njoin companies on companies.company_id = deals.company_id;",
+      "mensagem": "ERROR:  column reference \"company_id\" is ambiguous\nLINE 1: select company_id from deals join companies on companies.com...\n               ^",
+      "explicacao": "A coluna `company_id` existe nas **duas** tabelas. O Postgres não tem como adivinhar qual delas você quer, então recusa.\n\nA solução é qualificar: `d.company_id` ou `c.company_id`.\n\nNeste caso as duas dariam o mesmo valor, porque foi exatamente por elas que você casou as tabelas. Mas o Postgres não assume isso, e faz bem.\n\nPara evitar essa classe de erro inteira, **use apelido em toda tabela e prefixo em toda coluna desde o primeiro join**. Custa três caracteres e economiza confusão."
+    },
+    "exercicio": {
+      "enunciado": "Descubra qual segmento de empresa gera mais receita. Junte `deals` com `companies` pela coluna `company_id`, filtre só os negócios ganhos, e mostre segmento, quantidade de negócios e receita total, ordenado pela receita.",
+      "dica": "Use apelido nas duas tabelas. A condição do join é a coluna que existe nas duas.",
+      "gabarito": "select c.segment,\n       count(*) as negocios,\n       sum(d.amount) as receita\nfrom deals d\njoin companies c on c.company_id = d.company_id\nwhere d.status = 'won'\ngroup by c.segment\norder by receita desc;",
+      "resultado_esperado": "5 segmentos. O primeiro colocado passa de 280 mil e não é o que tem mais negócios."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Receita ganha por time de vendas, juntando deals com owners.",
+        "gabarito": "select o.team, sum(d.amount) receita from deals d join owners o on o.owner_id = d.owner_id where d.status='won' group by o.team order by receita desc;"
+      },
+      {
+        "enunciado": "Ticket médio por porte de empresa, apenas negócios ganhos.",
+        "gabarito": "select c.size_band, round(avg(d.amount),0) ticket from deals d join companies c on c.company_id = d.company_id where d.status='won' group by c.size_band order by ticket;"
+      },
+      {
+        "enunciado": "Taxa de ganho por segmento, combinando o JOIN da lição 7 com o FILTER da lição 6.",
+        "gabarito": "select c.segment, count(*) total, count(*) filter (where d.status='won') ganhos, round(100.0*count(*) filter (where d.status='won')/count(*),1) taxa from deals d join companies c on c.company_id = d.company_id group by c.segment order by taxa desc;"
+      }
+    ]
+  },
+  {
+    "id": "L08",
+    "bloco": 3,
+    "bloco_nome": "Juntar tabelas",
+    "titulo": "Encontrar o que não existe do outro lado",
+    "pergunta_negocio": "Quantas empresas nunca viraram oportunidade?",
+    "duracao_min": 35,
+    "conceito": "O `JOIN` da lição anterior tem um comportamento que passa despercebido: ele **descarta** o que não casa dos dois lados.\n\nSe uma empresa não tem nenhum negócio, ela some do resultado. Se um vendedor não tem nenhuma venda, ele não aparece no ranking.\n\nNa maioria das vezes isso é o que você quer. Mas às vezes a ausência **é** a resposta.\n\n\"Quantas empresas nunca viraram oportunidade\" é pergunta de ausência. \"Quais vendedores estão sem pipeline\" também. \"Quais clientes ganhos não têm nenhum negócio aberto hoje\" também, e essa é uma lista de reativação que vale dinheiro.\n\n`LEFT JOIN` resolve: ele mantém **tudo da tabela da esquerda** e preenche com `NULL` o que não encontrou na direita.",
+    "sintaxe": {
+      "codigo": "select o.owner_name,\n       o.team,\n       count(d.deal_id) as negocios\nfrom owners o\nleft join deals d on d.owner_id = o.owner_id\ngroup by o.owner_name, o.team\norder by negocios desc;",
+      "explicacao": "A tabela da **esquerda** é a que vem no `from`. Aqui é `owners`, então todos os vendedores aparecem, inclusive quem não tem negócio nenhum.\n\nRepare que a contagem é `count(d.deal_id)` e não `count(*)`.\n\nA diferença é a lição 4 voltando: um vendedor sem negócio ainda gera uma linha no resultado, com as colunas de `deals` todas nulas. `count(*)` contaria essa linha e devolveria 1. `count(d.deal_id)` ignora o nulo e devolve 0, que é o número correto.\n\nEsse detalhe separa quem entende de quem copiou."
+    },
+    "variacao": {
+      "codigo": "select count(*) as empresas_sem_negocio\nfrom companies c\nleft join deals d on d.company_id = c.company_id\nwhere d.deal_id is null;",
+      "explicacao": "Este é o padrão para encontrar órfãos, e ele é elegante quando você enxerga a mecânica.\n\nO `left join` traz todas as empresas. As que não têm negócio ficam com as colunas de `deals` nulas.\n\nO `where d.deal_id is null` mantém **exatamente essas**, porque `deal_id` é chave primária e nunca é nula de verdade. Se está nula aqui, é porque o join não encontrou par.\n\nNesta base, 42 das 400 empresas nunca tiveram negócio criado. Em operação real, esse número costuma abrir uma conversa desconfortável e útil sobre qualidade de base."
+    },
+    "erro_classico": {
+      "codigo": "select o.owner_name, count(*) as negocios\nfrom owners o\njoin deals d on d.owner_id = o.owner_id\ngroup by o.owner_name;",
+      "mensagem": "Roda sem erro. Devolve menos linhas do que deveria.",
+      "explicacao": "Dois erros empilhados, e nenhum dá mensagem.\n\nO primeiro é o `join` simples: vendedor sem negócio nenhum não aparece na lista. Se o gestor pediu o desempenho do time inteiro, você entregou o time incompleto, e justamente escondeu quem tem zero, que é a informação mais acionável.\n\nO segundo é o `count(*)`: mesmo trocando para `left join`, ele contaria 1 para quem tem zero negócios.\n\nSempre que a pergunta contiver as palavras **nenhum**, **nunca**, **sem** ou **zero**, pare e pergunte se você precisa de `left join`."
+    },
+    "exercicio": {
+      "enunciado": "Descubra quantas empresas nunca tiveram um negócio criado. Use `left join` de `companies` para `deals` e filtre onde o lado direito ficou nulo.",
+      "dica": "A tabela da esquerda é a que você quer preservar inteira. O filtro vai na chave da tabela da direita.",
+      "gabarito": "select count(*) as empresas_sem_negocio\nfrom companies c\nleft join deals d on d.company_id = c.company_id\nwhere d.deal_id is null;",
+      "resultado_esperado": "42"
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Todos os vendedores com a contagem de negócios, incluindo quem tem zero.",
+        "gabarito": "select o.owner_name, o.team, count(d.deal_id) as negocios from owners o left join deals d on d.owner_id = o.owner_id group by o.owner_name, o.team order by negocios desc;"
+      },
+      {
+        "enunciado": "Empresas que existem na base mas não têm nenhum contato cadastrado.",
+        "gabarito": "select count(*) from companies c left join contacts ct on ct.company_id = c.company_id where ct.contact_id is null;"
+      },
+      {
+        "enunciado": "Negócios que não têm nenhuma atividade registrada.",
+        "gabarito": "select count(*) from deals d left join activities a on a.deal_id = d.deal_id where a.activity_id is null;"
+      }
+    ]
+  },
+  {
+    "id": "L09",
+    "bloco": 3,
+    "bloco_nome": "Juntar tabelas",
+    "titulo": "O erro que infla receita em sete vezes",
+    "pergunta_negocio": "Por que meu relatório mostra sete vezes mais receita do que existe?",
+    "duracao_min": 30,
+    "conceito": "Esta lição não ensina sintaxe nova. Ensina o erro que mais destrói relatório comercial no mundo real, e que quase nenhum curso de SQL menciona.\n\nAté agora, todo join foi de um para um: cada negócio tem **uma** empresa, cada negócio tem **um** vendedor.\n\nMas cada negócio tem **várias** atividades. São 900 negócios e 6.300 atividades, sete por negócio em média.\n\nQuando você junta `deals` com `activities`, cada negócio se multiplica pelo número de atividades dele. O negócio de 46 mil reais que teve sete ligações aparece **sete vezes** no resultado.\n\nSe você somar `amount` depois disso, a receita infla em sete vezes.\n\nIsso se chama **fan-out**. É o que acontece quando você junta uma tabela filha à tabela pai e esquece que a relação é de um para muitos.",
+    "sintaxe": {
+      "codigo": "select (select count(*) from deals) as deals_real,\n       (select count(*)\n        from deals d\n        join activities a on a.deal_id = d.deal_id) as apos_join;",
+      "explicacao": "Rode e olhe os dois números lado a lado: 900 e 6.300.\n\nO join não trouxe informação nova sobre negócios. Ele multiplicou cada negócio pelo número de atividades dele.\n\nExatamente sete vezes, que é a média de atividades por negócio nesta base."
+    },
+    "variacao": {
+      "codigo": "select d.deal_id,\n       d.deal_name,\n       count(a.activity_id) as qtd_atividades\nfrom deals d\nleft join activities a on a.deal_id = d.deal_id\nwhere d.status = 'won'\ngroup by d.deal_id, d.deal_name\norder by qtd_atividades desc\nlimit 10;",
+      "explicacao": "Esta é a forma **correta** de usar a tabela filha.\n\nO `group by d.deal_id` recolhe as linhas multiplicadas de volta para uma por negócio, e a agregação `count()` extrai a informação que interessava: quantas atividades cada negócio teve.\n\nO fan-out aconteceu, mas foi desfeito antes de qualquer soma.\n\n**A regra que resolve para sempre:** se você juntou uma tabela filha, agrupe pela chave da tabela pai antes de somar qualquer coisa. E se precisar contar valores únicos numa query com duas tabelas filhas ao mesmo tempo, use `count(distinct ...)`, senão a contagem também infla."
+    },
+    "erro_classico": {
+      "codigo": "select sum(d.amount) as receita\nfrom deals d\njoin activities a on a.deal_id = d.deal_id\nwhere d.status = 'won';",
+      "mensagem": "Roda sem erro. Devolve um número aproximadamente sete vezes maior que a receita real.",
+      "explicacao": "Este número vai para o slide. Ninguém confere. A reunião inteira discute um resultado que não existe.\n\nÉ o erro mais caro desta trilha, e o único sintoma é que o número parece bom demais.\n\n**O sinal de alerta:** sempre que sua contagem for um múltiplo suspeito da esperada (o dobro, o triplo, sete vezes), suspeite de fan-out antes de qualquer outra coisa.\n\n**O hábito que previne:** antes de somar em query com join, rode `select count(*)` na mesma estrutura. Se der mais que o número de linhas da tabela pai, você multiplicou.\n\nEsse hábito custa dez segundos e é o que separa quem entrega número confiável de quem entrega número bonito."
+    },
+    "exercicio": {
+      "enunciado": "Prove o fan-out para si mesmo. Escreva uma query que mostre lado a lado a receita ganha correta (sem join com atividades) e a receita inflada (com join). Olhe a diferença e calcule quantas vezes ela inflou.",
+      "dica": "Duas subqueries dentro do mesmo select, como no exemplo da sintaxe. Uma soma amount só de deals, a outra soma depois do join.",
+      "gabarito": "select (select sum(amount) from deals where status = 'won') as receita_correta,\n       (select sum(d.amount)\n        from deals d\n        join activities a on a.deal_id = d.deal_id\n        where d.status = 'won') as receita_inflada;",
+      "resultado_esperado": "A segunda é cerca de sete vezes a primeira."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Os 10 negócios ganhos com mais atividades registradas, sem inflar nada.",
+        "gabarito": "select d.deal_id, d.deal_name, count(a.activity_id) qtd from deals d left join activities a on a.deal_id = d.deal_id where d.status='won' group by d.deal_id, d.deal_name order by qtd desc limit 10;"
+      },
+      {
+        "enunciado": "Empresas com 5 ou mais negócios, mostrando negócios e contatos. Cuidado: duas tabelas filhas ao mesmo tempo.",
+        "gabarito": "select co.company_name, count(distinct d.deal_id) deals, count(distinct ct.contact_id) contatos from companies co left join deals d on d.company_id = co.company_id left join contacts ct on ct.company_id = co.company_id group by co.company_name having count(distinct d.deal_id) >= 5 order by deals desc limit 10;"
+      },
+      {
+        "enunciado": "Média de atividades por negócio, comparando ganhos, perdidos e abertos.",
+        "gabarito": "select d.status, round(count(a.activity_id)::numeric / count(distinct d.deal_id), 2) as media_atividades from deals d left join activities a on a.deal_id = d.deal_id group by d.status;"
+      }
+    ]
+  },
+  {
+    "id": "L10",
+    "bloco": 4,
+    "bloco_nome": "Tempo e lógica",
+    "titulo": "De linha solta para série temporal",
+    "pergunta_negocio": "Como a criação de negócios evoluiu mês a mês?",
+    "duracao_min": 35,
+    "conceito": "Toda pergunta comercial séria tem tempo dentro. Quanto vendemos **este mês**. O ciclo está encurtando **ao longo do ano**. Este trimestre foi melhor que o anterior.\n\nO problema é que a coluna `created_at` guarda data e hora com precisão de segundo. Agrupar por ela criaria 900 grupos de uma linha cada, o que não é série nenhuma.\n\n`DATE_TRUNC` resolve. Ele **corta** a data na precisão que você pedir. Se você pede mês, toda data de março vira `2026-03-01`. Aí o `group by` funciona e nasce a série.\n\nÉ a função mais usada em análise comercial, e é a que separa quem faz relatório de quem faz análise.",
+    "sintaxe": {
+      "codigo": "select date_trunc('month', created_at)::date as mes,\n       count(*) as criados\nfrom deals\ngroup by 1\norder by 1;",
+      "explicacao": "`date_trunc('month', created_at)` corta a data no primeiro dia do mês.\n\nAs precisões que você vai usar: `'day'`, `'week'`, `'month'`, `'quarter'`, `'year'`.\n\n`::date` converte para data pura, removendo a parte de hora que ficaria zerada e poluindo o resultado. Esse `::` é a forma curta de conversão de tipo no Postgres.\n\n`group by 1` agrupa pela **primeira coluna do select**. É atalho legítimo e muito usado quando a expressão é longa. `group by date_trunc('month', created_at)` funcionaria igual, só é mais verboso."
+    },
+    "variacao": {
+      "codigo": "select source,\n       round(avg(closed_at::date - created_at::date), 1) as ciclo_medio_dias\nfrom deals\nwhere status = 'won'\ngroup by source\norder by ciclo_medio_dias;",
+      "explicacao": "Subtrair duas datas no Postgres devolve o **número de dias** entre elas. Simples assim.\n\n`closed_at::date - created_at::date` é o ciclo de venda daquele negócio em dias. A média disso por origem é o ciclo médio.\n\nOs `::date` estão ali porque as colunas guardam data e hora. Subtraindo timestamps, o resultado viria em intervalo com horas e minutos, que é difícil de ler e de promediar.\n\nPara contas com o presente, existe o `interval`:\n\n`where created_at < current_date - interval '90 days'`\n\nIsso pega o que foi criado há mais de noventa dias. `current_date` é hoje, e o `interval` aceita `'7 days'`, `'3 months'`, `'1 year'`."
+    },
+    "erro_classico": {
+      "codigo": "select date_trunc('mes', created_at)\nfrom deals;",
+      "mensagem": "ERROR:  unit \"mes\" not recognized for type timestamp without time zone",
+      "explicacao": "A unidade vai em inglês: `'month'`, não `'mes'`.\n\nErro bobo, mas vale a mensagem, porque ela é um bom exemplo de como o Postgres se comunica: ele diz qual unidade não reconheceu e para qual tipo de coluna.\n\nExiste um erro mais sutil na mesma família. Filtrar mês com `where extract(month from created_at) = 3` funciona, mas junta março de 2025 com março de 2026 no mesmo balde. Se a intenção era um mês específico, use intervalo de data:\n\n`where created_at >= '2026-03-01' and created_at < '2026-04-01'`\n\nRepare no `<` na ponta de cima, e não `<=`. Com `<=` você incluiria o dia 1 de abril inteiro."
+    },
+    "exercicio": {
+      "enunciado": "Monte a série mensal de negócios criados: uma linha por mês, com a contagem, em ordem cronológica.",
+      "dica": "DATE_TRUNC no select e no group by. O atalho `group by 1` ajuda.",
+      "gabarito": "select date_trunc('month', created_at)::date as mes,\n       count(*) as criados\nfrom deals\ngroup by 1\norder by 1;",
+      "resultado_esperado": "Uma linha por mês, começando em fevereiro de 2025."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Ciclo médio de venda em dias, por origem, só para negócios ganhos.",
+        "gabarito": "select source, round(avg(closed_at::date - created_at::date),1) as ciclo from deals where status='won' group by source order by ciclo;"
+      },
+      {
+        "enunciado": "Quantos negócios abertos foram criados há mais de 90 dias e continuam parados.",
+        "gabarito": "select count(*) from deals where status='open' and created_at < current_date - interval '90 days';"
+      },
+      {
+        "enunciado": "Por trimestre de fechamento: receita ganha, quantidade de ganhos e de perdidos.",
+        "gabarito": "select date_trunc('quarter', closed_at)::date as trimestre, sum(amount) filter (where status='won') receita, count(*) filter (where status='won') ganhos, count(*) filter (where status='lost') perdidos from deals where closed_at is not null group by 1 order by 1;"
+      }
+    ]
+  },
+  {
+    "id": "L11",
+    "bloco": 4,
+    "bloco_nome": "Tempo e lógica",
+    "titulo": "Criar categoria dentro da query",
+    "pergunta_negocio": "Quantos negócios fecham rápido e quantos se arrastam?",
+    "duracao_min": 30,
+    "conceito": "As colunas do CRM raramente têm a categoria que você precisa para a análise.\n\nNão existe coluna \"faixa de ciclo\". Não existe coluna \"negócio grande ou pequeno\". Não existe coluna \"amostra confiável ou não\".\n\nVocê pode pedir para o time criar essas colunas no CRM, esperar duas semanas e negociar prioridade. Ou pode criar dentro da query, em trinta segundos, e mudar de ideia quantas vezes quiser.\n\n`CASE WHEN` é o `SE` do Excel dentro do SQL. Ele testa condições em ordem e devolve o primeiro resultado que bater.\n\nJunto com ele vêm dois primos que resolvem os problemas de `NULL` da lição 3: `COALESCE` e `NULLIF`.",
+    "sintaxe": {
+      "codigo": "select\n  case\n    when closed_at::date - created_at::date <= 30 then 'ate 30 dias'\n    when closed_at::date - created_at::date <= 60 then '31 a 60 dias'\n    when closed_at::date - created_at::date <= 90 then '61 a 90 dias'\n    else 'acima de 90 dias'\n  end as faixa_ciclo,\n  count(*) as negocios,\n  round(avg(amount), 0) as ticket\nfrom deals\nwhere status = 'won'\ngroup by 1\norder by 1;",
+      "explicacao": "O `case` testa as condições **de cima para baixo** e para na primeira verdadeira.\n\nÉ por isso que a segunda linha pode escrever apenas `<= 60`: se a linha chegou até ali, é porque já não era menor ou igual a 30.\n\nO `else` pega tudo que não bateu em nenhuma condição. Se você omitir o `else`, o que sobra vira `NULL`, e aí você tem uma categoria fantasma no relatório.\n\nO `end` fecha o bloco. Esquecer dele é erro comum.\n\nRepare no `group by 1`: você pode agrupar pela categoria que acabou de inventar, referenciando a posição dela no select."
+    },
+    "variacao": {
+      "codigo": "select date_trunc('month', created_at)::date as mes,\n       count(*) as criados,\n       count(*) filter (where status = 'won') as ganhos,\n       round(100.0 * count(*) filter (where status = 'won')\n             / nullif(count(*), 0), 1) as conversao_pct\nfrom deals\ngroup by 1\norder by 1;",
+      "explicacao": "Aqui entra o `NULLIF`, e ele resolve um problema específico: divisão por zero.\n\n`nullif(count(*), 0)` significa: se a contagem for zero, devolva `NULL` em vez de zero.\n\nPor que isso ajuda? Porque dividir por zero **quebra a query inteira** com erro, enquanto dividir por `NULL` devolve `NULL` naquela linha e deixa o resto do relatório em pé.\n\nNesta base todo mês tem negócio, então nada quebraria. Mas em dado real sempre existe o mês sem venda, o segmento vazio, o vendedor novo. Colocar `nullif` no denominador é hábito barato que evita que um relatório de doze meses morra por causa de um mês.\n\nO outro primo é o `COALESCE`. Ele devolve o primeiro valor não nulo da lista:\n\n`coalesce(amount, 0)` mostra zero onde o valor não foi preenchido.\n\nUse com cuidado. `COALESCE` **esconde** a ausência de dado, e às vezes a ausência era a informação relevante. Se for tratar nulo como zero, mantenha uma coluna sinalizando que aquilo foi preenchido por você e não pelo CRM."
+    },
+    "erro_classico": {
+      "codigo": "select 100.0 / 0;",
+      "mensagem": "ERROR:  division by zero",
+      "explicacao": "Este erro mata a query inteira. Não é uma linha com problema: é o relatório todo que não sai.\n\nEm análise real ele aparece no pior momento, quando você já entregou a query e alguém rodou num recorte diferente que tinha um grupo vazio.\n\nA prevenção é colocar `nullif(denominador, 0)` em **toda** divisão que você escrever. Não custa nada e nunca atrapalha.\n\nExiste um segundo erro clássico nesta lição, silencioso: um `case` sem `else` que devolve `NULL` para casos não previstos. Você monta faixas de 0 a 30, 31 a 60 e 61 a 90, roda, e alguns negócios somem do relatório sem aviso. Sempre feche com `else`."
+    },
+    "exercicio": {
+      "enunciado": "Distribua os negócios ganhos em faixas de ciclo de venda: até 30 dias, 31 a 60, 61 a 90 e acima de 90. Para cada faixa mostre a quantidade de negócios e o ticket médio arredondado sem casas decimais.",
+      "dica": "CASE WHEN no select, group by pela posição 1. O ciclo é a subtração das duas datas.",
+      "gabarito": "select\n  case\n    when closed_at::date - created_at::date <= 30 then 'ate 30 dias'\n    when closed_at::date - created_at::date <= 60 then '31 a 60 dias'\n    when closed_at::date - created_at::date <= 90 then '61 a 90 dias'\n    else 'acima de 90 dias'\n  end as faixa_ciclo,\n  count(*) as negocios,\n  round(avg(amount), 0) as ticket\nfrom deals\nwhere status = 'won'\ngroup by 1\norder by 1;",
+      "resultado_esperado": "4 faixas. Repare se o ticket cresce junto com o ciclo."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Série mensal de criados, ganhos e taxa de conversão, com a divisão protegida por NULLIF.",
+        "gabarito": "select date_trunc('month', created_at)::date mes, count(*) criados, count(*) filter (where status='won') ganhos, round(100.0*count(*) filter (where status='won')/nullif(count(*),0),1) conversao from deals group by 1 order by 1;"
+      },
+      {
+        "enunciado": "Liste negócios abertos tratando valor nulo como zero, com uma coluna sinalizando quais estavam sem preenchimento.",
+        "gabarito": "select deal_id, deal_name, coalesce(amount,0) as amount_tratado, case when amount is null then 'sem valor preenchido' else 'ok' end as qualidade from deals where status='open' order by deal_id limit 20;"
+      },
+      {
+        "enunciado": "Taxa de ganho por origem com uma coluna avisando quando a amostra é pequena demais para concluir algo.",
+        "gabarito": "select source, count(*) total, round(100.0*count(*) filter (where status='won')/count(*),1) taxa, case when count(*) < 50 then 'amostra pequena, nao concluir' else 'amostra suficiente' end as leitura from deals group by source order by taxa desc;"
+      }
+    ]
+  },
+  {
+    "id": "L12",
+    "bloco": 5,
+    "bloco_nome": "Estruturar",
+    "titulo": "Quebrar o problema em etapas nomeadas",
+    "pergunta_negocio": "Onde exatamente o meu funil vaza?",
+    "duracao_min": 45,
+    "conceito": "Esta é a lição mais importante da trilha. É onde tudo que veio antes se junta numa análise de verdade.\n\nAté aqui, cada query respondia uma pergunta. Análise real precisa de etapas: calcule isto, depois compare com aquilo, depois classifique o resultado.\n\n`WITH`, também chamado de CTE, permite dar **nome** a uma query e usar esse nome como se fosse uma tabela na query seguinte.\n\nLembra da lição 1, quando eu disse que toda resposta volta como outra tabela? É aqui que isso paga.\n\nAlém da mecânica, existe uma razão profissional. Numa entrevista técnica, uma query de quarenta linhas em bloco único parece sorte. A mesma lógica em três CTEs nomeadas parece método. É a mesma pessoa, com percepção diferente.",
+    "sintaxe": {
+      "codigo": "with receita_por_dono as (\n  select owner_id, sum(amount) as receita\n  from deals\n  where status = 'won'\n  group by owner_id\n)\nselect o.owner_name, r.receita\nfrom receita_por_dono r\njoin owners o on o.owner_id = r.owner_id\nwhere r.receita > (select avg(receita) from receita_por_dono)\norder by r.receita desc;",
+      "explicacao": "A estrutura é sempre a mesma:\n\n`with nome as ( query )` define o bloco. Depois do parêntese que fecha, vem a query principal, que usa `nome` como se fosse tabela.\n\nAqui `receita_por_dono` é usado duas vezes: no `from` e dentro do parêntese que calcula a média. Isso é a vantagem prática: você calcula uma vez e reaproveita.\n\nPara encadear várias CTEs, separe por vírgula:\n\n`with etapa1 as (...), etapa2 as (...) select ...`\n\nE a etapa2 pode usar a etapa1. É assim que você constrói análise em camadas."
+    },
+    "variacao": {
+      "codigo": "with alcancou as (\n  select st.stage_order,\n         st.stage_name,\n         count(distinct h.deal_id) as deals_que_passaram\n  from stages st\n  left join deal_stage_history h on h.stage = st.stage_name\n  where st.is_closed = false\n  group by st.stage_order, st.stage_name\n)\nselect stage_order,\n       stage_name,\n       deals_que_passaram,\n       round(100.0 * deals_que_passaram / max(deals_que_passaram) over (), 1) as pct_do_topo\nfrom alcancou\norder by stage_order;",
+      "explicacao": "Esta é a query que dá título à lição, e vale destrinchar.\n\nA tabela `deal_stage_history` guarda cada vez que um negócio entrou numa etapa. A tabela `stages` guarda a **ordem correta** das etapas, que é informação que não existe em `deal_stage_history`.\n\nSem a tabela `stages`, o funil sairia em ordem alfabética, e Negociação viria antes de Novo. Esse é o tipo de detalhe que faz um relatório parecer certo e estar errado.\n\n`left join` de `stages` para o histórico garante que uma etapa por onde ninguém passou ainda apareça, com zero.\n\n`count(distinct h.deal_id)` conta negócios únicos, não registros de histórico. Se um negócio voltou de etapa, ele não conta duas vezes.\n\nO `max(...) over ()` é uma prévia da lição 13: ele pega o maior valor da coluna inteira sem colapsar as linhas, o que dá o topo do funil para calcular o percentual.\n\nO resultado é a queda etapa a etapa. **É a query que responde onde o funil vaza**, e é a peça que vale levar para uma conversa de trabalho."
+    },
+    "erro_classico": {
+      "codigo": "select *\nfrom base;",
+      "mensagem": "ERROR:  relation \"base\" does not exist\nLINE 1: select * from base;\n                      ^",
+      "explicacao": "A CTE **só existe dentro da query que a definiu**. Terminou a query, ela evapora.\n\nEsse erro aparece quando você escreve o `with`, roda, funciona, e depois escreve outra query tentando usar o nome de novo. Não dá.\n\nSe você precisa reaproveitar de verdade, existe `create view`, mas isso é assunto de outro escopo e você não precisa agora.\n\nUm segundo erro comum: definir uma CTE e esquecer de escrever a query principal depois dela. O `with` sozinho não é uma query completa, ele é o preparo para uma."
+    },
+    "exercicio": {
+      "enunciado": "Monte o funil por etapa. Use `deal_stage_history` e `stages` para descobrir quantos negócios distintos passaram por cada etapa não fechada, e calcule o percentual em relação ao topo do funil. Ordene pela ordem correta das etapas.",
+      "dica": "Comece pela tabela stages e faça left join no histórico. Filtre `is_closed = false`. Use count distinct.",
+      "gabarito": "with alcancou as (\n  select st.stage_order,\n         st.stage_name,\n         count(distinct h.deal_id) as deals_que_passaram\n  from stages st\n  left join deal_stage_history h on h.stage = st.stage_name\n  where st.is_closed = false\n  group by st.stage_order, st.stage_name\n)\nselect stage_order,\n       stage_name,\n       deals_que_passaram,\n       round(100.0 * deals_que_passaram / max(deals_que_passaram) over (), 1) as pct_do_topo\nfrom alcancou\norder by stage_order;",
+      "resultado_esperado": "5 etapas em ordem, com queda progressiva a partir de 100% no topo."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Vendedores com receita acima da média de receita dos vendedores.",
+        "gabarito": "with r as (select owner_id, sum(amount) receita from deals where status='won' group by owner_id) select o.owner_name, r.receita from r join owners o on o.owner_id = r.owner_id where r.receita > (select avg(receita) from r) order by r.receita desc;"
+      },
+      {
+        "enunciado": "Empresas que já ganharam algum negócio e hoje não têm nenhum aberto. É lista de reativação.",
+        "gabarito": "select co.company_name, co.segment from companies co where exists (select 1 from deals d where d.company_id = co.company_id and d.status='won') and not exists (select 1 from deals d where d.company_id = co.company_id and d.status='open') order by co.company_name limit 20;"
+      },
+      {
+        "enunciado": "Média de atividades por negócio, comparando ganhos, perdidos e abertos, usando uma CTE para contar antes.",
+        "gabarito": "with atividade as (select deal_id, count(*) n from activities group by deal_id) select d.status, round(avg(a.n),2) media from deals d join atividade a on a.deal_id = d.deal_id group by d.status order by media desc;"
+      }
+    ]
+  },
+  {
+    "id": "L13",
+    "bloco": 6,
+    "bloco_nome": "Window functions",
+    "titulo": "Calcular sobre o grupo sem perder a linha",
+    "pergunta_negocio": "Quanto cada vendedor representa da receita total?",
+    "duracao_min": 40,
+    "conceito": "O `GROUP BY` tem um custo que você já sentiu: ele **colapsa** as linhas. Se você agrupa por vendedor, perde os negócios individuais.\n\nMas existem perguntas que precisam das duas coisas ao mesmo tempo. \"Quanto este negócio representa do total do vendedor\" precisa do negócio **e** do total. \"Qual a posição deste negócio no ranking\" também.\n\nWindow function calcula sobre um conjunto de linhas **sem colapsar** essas linhas. Cada linha continua existindo e ganha uma coluna a mais com o cálculo do grupo dela.\n\nÉ aqui que a maioria dos candidatos a RevOps trava numa entrevista técnica. Também é aqui que quem sabe se separa do resto.",
+    "sintaxe": {
+      "codigo": "select owner_id,\n       deal_id,\n       amount,\n       row_number() over (partition by owner_id order by amount desc) as posicao\nfrom deals\nwhere status = 'won' and amount is not null\norder by owner_id, posicao;",
+      "explicacao": "A peça nova é o `over (...)`. Ele define a **janela**, ou seja, sobre quais linhas o cálculo acontece.\n\n`partition by owner_id` divide as linhas em blocos por vendedor. O cálculo reinicia a cada bloco.\n\n`order by amount desc` define a ordem dentro do bloco.\n\n`row_number()` numera as linhas: 1, 2, 3 dentro de cada vendedor.\n\nRepare que o resultado tem uma linha por negócio, não uma por vendedor. Nada foi colapsado.\n\nO `order by` de dentro do `over` é diferente do `order by` do fim da query. O primeiro ordena para o cálculo, o segundo ordena o resultado na tela."
+    },
+    "variacao": {
+      "codigo": "select o.owner_name,\n       sum(d.amount) as receita,\n       round(100.0 * sum(d.amount) / sum(sum(d.amount)) over (), 1) as pct_do_total\nfrom deals d\njoin owners o on o.owner_id = d.owner_id\nwhere d.status = 'won'\ngroup by o.owner_name\norder by pct_do_total desc;",
+      "explicacao": "Este `sum(sum(...)) over ()` parece estranho e é bonito quando você entende.\n\nO `sum(d.amount)` de dentro é a agregação normal: receita daquele vendedor.\n\nO `sum(...) over ()` de fora soma **essas somas**, ou seja, dá a receita total da empresa.\n\nO `over ()` vazio significa \"a janela é o resultado inteiro, sem partição\".\n\nSem window function, você precisaria de uma subquery ou de uma CTE só para calcular o total e depois cruzar. Aqui sai em uma linha.\n\nOutras funções da mesma família:\n\n`rank()` também numera, mas repete o número em caso de empate e pula o seguinte (1, 2, 2, 4).\n\n`dense_rank()` repete e não pula (1, 2, 2, 3).\n\n`row_number()` nunca repete, mesmo com empate.\n\nA escolha entre elas importa quando há empate, e é pergunta clássica de entrevista."
+    },
+    "erro_classico": {
+      "codigo": "select owner_id, row_number()\nfrom deals;",
+      "mensagem": "ERROR:  window function row_number requires an OVER clause\nLINE 1: select owner_id, row_number() from deals;\n                         ^",
+      "explicacao": "Window function **sempre** precisa do `over`, mesmo que vazio.\n\nA mensagem é direta e a correção é óbvia. O que vale registrar é o conceito por trás: sem `over`, o Postgres não sabe sobre quais linhas calcular, e ele não assume nada por você.\n\nExiste um segundo erro, mais sutil e sem mensagem: usar window function no `WHERE`. Não funciona, porque a janela é calculada **depois** do filtro. Se você quer filtrar por posição no ranking, precisa calcular numa CTE e filtrar na query de fora. É a lição 12 se juntando com esta."
+    },
+    "exercicio": {
+      "enunciado": "Mostre a participação percentual de cada vendedor na receita total ganha, sem usar subquery nem CTE. Traga nome do vendedor, receita e percentual do total, ordenado do maior para o menor.",
+      "dica": "Agregue por vendedor normalmente, e use uma window function com over vazio para pegar o total geral.",
+      "gabarito": "select o.owner_name,\n       sum(d.amount) as receita,\n       round(100.0 * sum(d.amount) / sum(sum(d.amount)) over (), 1) as pct_do_total\nfrom deals d\njoin owners o on o.owner_id = d.owner_id\nwhere d.status = 'won'\ngroup by o.owner_name\norder by pct_do_total desc;",
+      "resultado_esperado": "8 vendedores. Os percentuais somam 100."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Ranking dos negócios de cada vendedor por valor, do maior para o menor.",
+        "gabarito": "select owner_id, deal_id, amount, row_number() over (partition by owner_id order by amount desc) posicao from deals where status='won' and amount is not null order by owner_id, posicao limit 20;"
+      },
+      {
+        "enunciado": "Ranking de vendedores por receita total usando RANK.",
+        "gabarito": "select o.owner_name, sum(d.amount) receita, rank() over (order by sum(d.amount) desc) ranking from deals d join owners o on o.owner_id=d.owner_id where d.status='won' group by o.owner_name order by ranking;"
+      },
+      {
+        "enunciado": "Para cada negócio ganho, mostre o valor e o ticket médio do vendedor dele lado a lado.",
+        "gabarito": "select owner_id, deal_id, amount, round(avg(amount) over (partition by owner_id),0) as ticket_medio_do_vendedor from deals where status='won' and amount is not null order by owner_id limit 20;"
+      }
+    ]
+  },
+  {
+    "id": "L14",
+    "bloco": 6,
+    "bloco_nome": "Window functions",
+    "titulo": "Comparar com o passado",
+    "pergunta_negocio": "Este mês foi melhor que o anterior? A tendência está subindo?",
+    "duracao_min": 40,
+    "conceito": "Número solto não diz nada. Cem mil de receita é bom ou ruim? Depende do mês passado.\n\nToda análise comercial séria compara: contra o mês anterior, contra o acumulado, contra a tendência.\n\nEm planilha isso é fácil, porque você referencia a célula de cima. Em SQL, linha não tem noção de vizinha, e é aí que a maioria empaca e exporta tudo para o Excel.\n\nAs window functions desta lição resolvem sem sair do banco:\n\n- `lag()` traz o valor da linha **anterior**\n- `lead()` traz o valor da linha **seguinte**\n- `sum() over (order by ...)` cria soma **acumulada**\n- a cláusula `rows between` cria **média móvel**",
+    "sintaxe": {
+      "codigo": "with mensal as (\n  select date_trunc('month', closed_at)::date as mes,\n         sum(amount) as receita\n  from deals\n  where status = 'won'\n  group by 1\n)\nselect mes,\n       receita,\n       lag(receita) over (order by mes) as mes_anterior,\n       round(100.0 * (receita - lag(receita) over (order by mes))\n             / nullif(lag(receita) over (order by mes), 0), 1) as variacao_pct\nfrom mensal\norder by mes;",
+      "explicacao": "A CTE da lição 12 prepara a série mensal. A window function compara.\n\n`lag(receita) over (order by mes)` traz a receita do mês anterior para a mesma linha. O `order by` de dentro do `over` é que define o que é anterior.\n\nA conta de variação é a de sempre, e repare que o `nullif` da lição 11 está protegendo a divisão.\n\n**O primeiro mês vai devolver nulo**, porque não existe mês anterior a ele. Isso está certo, não é bug. Resistir à tentação de esconder esse nulo com `coalesce` faz parte de entregar número honesto."
+    },
+    "variacao": {
+      "codigo": "with coorte as (\n  select date_trunc('month', created_at)::date as mes_entrada,\n         count(*) as entraram,\n         count(*) filter (where status = 'won') as ganharam,\n         count(*) filter (where status = 'open') as ainda_abertos\n  from deals\n  group by 1\n)\nselect mes_entrada,\n       entraram,\n       ganharam,\n       ainda_abertos,\n       round(100.0 * ganharam / entraram, 1) as conversao_pct,\n       round(avg(round(100.0 * ganharam / entraram, 1))\n             over (order by mes_entrada rows between 2 preceding and current row), 1) as media_movel_3m\nfrom coorte\norder by mes_entrada;",
+      "explicacao": "Análise de coorte, que é a peça final da trilha.\n\nEla agrupa os negócios pelo mês em que **entraram**, não pelo mês em que fecharam. Isso responde uma pergunta diferente e melhor: dos negócios que entraram em março, quantos converteram?\n\nA média móvel usa a cláusula `rows between 2 preceding and current row`: a janela de cada linha são ela mesma e as duas anteriores. Isso suaviza o ruído mês a mês e mostra a tendência.\n\nRepare na coluna `ainda_abertos`. Coorte recente tem muito negócio aberto, então a conversão dela parece pior do que vai ser. Sem essa coluna, você olharia os últimos meses e concluiria que a operação piorou, quando na verdade ela só não terminou.\n\nEsse é o tipo de armadilha que separa análise de gráfico bonito."
+    },
+    "erro_classico": {
+      "codigo": "select date_trunc('month', closed_at)::date as mes,\n       sum(amount) as receita,\n       lag(sum(amount)) over () as mes_anterior\nfrom deals\nwhere status = 'won'\ngroup by 1;",
+      "mensagem": "Roda sem erro. A coluna mes_anterior traz valores em ordem imprevisível.",
+      "explicacao": "O `over ()` está vazio, sem `order by`.\n\nSem ordem definida, o Postgres não garante qual linha é a anterior. Ele pode devolver qualquer uma, e pior, pode devolver diferente a cada execução.\n\nO resultado é uma coluna de variação percentual que parece plausível e é aleatória.\n\n**Regra:** `lag`, `lead`, soma acumulada e média móvel **exigem** `order by` dentro do `over`. Sem ele, o resultado não tem significado.\n\nO `order by` do fim da query não serve para isso. Ele ordena a tela, não a janela."
+    },
+    "exercicio": {
+      "enunciado": "Monte a análise de coorte por mês de entrada: quantos negócios entraram, quantos ganharam, quantos seguem abertos, a taxa de conversão e a média móvel de três meses dessa taxa.",
+      "dica": "CTE para montar a coorte, window function para a média móvel. A janela é `rows between 2 preceding and current row`.",
+      "gabarito": "with coorte as (\n  select date_trunc('month', created_at)::date as mes_entrada,\n         count(*) as entraram,\n         count(*) filter (where status = 'won') as ganharam,\n         count(*) filter (where status = 'open') as ainda_abertos\n  from deals\n  group by 1\n)\nselect mes_entrada,\n       entraram,\n       ganharam,\n       ainda_abertos,\n       round(100.0 * ganharam / entraram, 1) as conversao_pct,\n       round(avg(round(100.0 * ganharam / entraram, 1))\n             over (order by mes_entrada rows between 2 preceding and current row), 1) as media_movel_3m\nfrom coorte\norder by mes_entrada;",
+      "resultado_esperado": "Uma linha por mês. Os últimos meses têm muitos abertos e conversão artificialmente baixa."
+    },
+    "pratica_extra": [
+      {
+        "enunciado": "Receita mensal com coluna de receita acumulada no período.",
+        "gabarito": "with m as (select date_trunc('month',closed_at)::date mes, sum(amount) receita from deals where status='won' group by 1) select mes, receita, sum(receita) over (order by mes) as acumulada from m order by mes;"
+      },
+      {
+        "enunciado": "Receita mensal com o mês anterior ao lado e a variação percentual.",
+        "gabarito": "with m as (select date_trunc('month',closed_at)::date mes, sum(amount) receita from deals where status='won' group by 1) select mes, receita, lag(receita) over (order by mes) anterior, round(100.0*(receita - lag(receita) over (order by mes))/nullif(lag(receita) over (order by mes),0),1) variacao from m order by mes;"
+      },
+      {
+        "enunciado": "Prova final. Escreva uma análise respondendo onde está o maior vazamento do funil e o que a operação deveria fazer, sustentada por no mínimo quatro queries suas.",
+        "gabarito": "Sem gabarito. Esta é a entrega que vale mostrar."
+      }
+    ]
+  }
+]
