@@ -98,3 +98,35 @@ export const stateLabel: Record<LessonState, string> = {
   resolvida: "resolvida",
   resolvida_com_gabarito: "resolvida com gabarito",
 };
+
+const ACTIVE_KEY = "sqlvende:active";
+let activeLesson = "";
+let activeLoaded = false;
+
+function loadActive() {
+  if (activeLoaded || typeof window === "undefined") return;
+  activeLoaded = true;
+  activeLesson = localStorage.getItem(ACTIVE_KEY) ?? "";
+}
+
+export function setActiveLesson(id: string) {
+  loadActive();
+  activeLesson = id;
+  try {
+    localStorage.setItem(ACTIVE_KEY, id);
+  } catch {
+    /* ignore */
+  }
+  emit();
+}
+
+export function useActiveLesson(): string {
+  return useSyncExternalStore(
+    subscribe,
+    () => {
+      loadActive();
+      return activeLesson;
+    },
+    () => "",
+  );
+}
