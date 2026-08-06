@@ -7,6 +7,8 @@ import { useProgress } from "@/lib/progress";
 import { SchemaExplorer } from "./SchemaExplorer";
 import { DbStatus } from "./DbStatus";
 import { ReseedButton } from "./ReseedButton";
+import { InstallButton } from "./InstallButton";
+
 
 function LessonNav() {
   const progress = useProgress();
