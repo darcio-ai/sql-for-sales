@@ -7,6 +7,8 @@ import { useProgress } from "@/lib/progress";
 import { SchemaExplorer } from "./SchemaExplorer";
 import { DbStatus } from "./DbStatus";
 import { ReseedButton } from "./ReseedButton";
+import { InstallButton } from "./InstallButton";
+
 
 function LessonNav() {
   const progress = useProgress();
@@ -121,9 +123,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               {children}
             </div>
           </div>
-          <div className="mt-8 border-t border-border pt-3">
+          <div className="mt-8 flex flex-col gap-2 border-t border-border pt-3">
+            <InstallButton />
             <ReseedButton />
           </div>
+
         </main>
 
         <aside className="hidden lg:block">
