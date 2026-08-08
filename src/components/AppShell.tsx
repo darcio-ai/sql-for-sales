@@ -78,6 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="hidden font-mono text-[0.75rem] text-muted-foreground sm:inline">
               {solved}/{LICOES.length}
             </span>
+            <AccountStatus />
             <DbStatus />
           </div>
         </div>
