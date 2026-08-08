@@ -78,20 +78,65 @@ export function getEntry(id: string): Entry {
   return store[id] ?? { estado: "nao_iniciada", query: "" };
 }
 
-export function setLessonQuery(id: string, query: string) {
+export type ProgressEntry = Entry;
+
+let syncHook: ((id: string, entry: Entry) => void) | null = null;
+
+export function setProgressSyncHook(fn: ((id: string, entry: Entry) => void) | null) {
+  syncHook = fn;
+}
+
+export function getAllProgress(): Store {
   load();
-  store = { ...store, [id]: { ...getEntry(id), query } };
+  return store;
+}
+
+const RANK: Record<LessonState, number> = {
+  nao_iniciada: 0,
+  resolvida_com_gabarito: 1,
+  resolvida: 2,
+};
+
+/** Une o progresso remoto com o local e devolve o que precisa subir para a nuvem. */
+export function mergeRemoteProgress(remote: Record<string, Entry>): Record<string, Entry> {
+  load();
+  const merged: Store = { ...store };
+  const toPush: Record<string, Entry> = {};
+
+  const ids = new Set([...Object.keys(store), ...Object.keys(remote)]);
+  for (const id of ids) {
+    const local = store[id] ?? { estado: "nao_iniciada" as LessonState, query: "" };
+    const cloud = remote[id] ?? { estado: "nao_iniciada" as LessonState, query: "" };
+    const estado = RANK[local.estado] >= RANK[cloud.estado] ? local.estado : cloud.estado;
+    const query = local.query || cloud.query;
+    merged[id] = { estado, query };
+    if (estado !== cloud.estado || query !== cloud.query) toPush[id] = merged[id];
+  }
+
+  store = merged;
   persist();
   emit();
+  return toPush;
+}
+
+export function setLessonQuery(id: string, query: string) {
+  load();
+  const entry = { ...getEntry(id), query };
+  store = { ...store, [id]: entry };
+  persist();
+  emit();
+  syncHook?.(id, entry);
 }
 
 export function setLessonState(id: string, estado: LessonState) {
   load();
   const current = getEntry(id);
   if (current.estado === "resolvida" && estado === "resolvida_com_gabarito") return;
-  store = { ...store, [id]: { ...current, estado } };
+  const entry = { ...current, estado };
+  store = { ...store, [id]: entry };
   persist();
   emit();
+  syncHook?.(id, entry);
 }
 
 export const stateLabel: Record<LessonState, string> = {
