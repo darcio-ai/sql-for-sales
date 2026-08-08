@@ -8,6 +8,7 @@ import { SchemaExplorer } from "./SchemaExplorer";
 import { DbStatus } from "./DbStatus";
 import { ReseedButton } from "./ReseedButton";
 import { InstallButton } from "./InstallButton";
+import { AccountStatus } from "./AccountStatus";
 
 
 function LessonNav() {
@@ -77,6 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="hidden font-mono text-[0.75rem] text-muted-foreground sm:inline">
               {solved}/{LICOES.length}
             </span>
+            <AccountStatus />
             <DbStatus />
           </div>
         </div>
