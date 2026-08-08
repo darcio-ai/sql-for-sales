@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PraticaRouteImport } from './routes/pratica'
 import { Route as ReferenciaRouteImport } from './routes/referencia'
 import { Route as LicaoIdRouteImport } from './routes/licao.$id'
@@ -17,6 +18,11 @@ import { Route as LicaoIdRouteImport } from './routes/licao.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PraticaRoute = PraticaRouteImport.update({
@@ -37,12 +43,14 @@ const LicaoIdRoute = LicaoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/pratica': typeof PraticaRoute
   '/referencia': typeof ReferenciaRoute
   '/licao/$id': typeof LicaoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/pratica': typeof PraticaRoute
   '/referencia': typeof ReferenciaRoute
   '/licao/$id': typeof LicaoIdRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/pratica': typeof PraticaRoute
   '/referencia': typeof ReferenciaRoute
   '/licao/$id': typeof LicaoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pratica' | '/referencia' | '/licao/$id'
+  fullPaths: '/' | '/auth' | '/pratica' | '/referencia' | '/licao/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pratica' | '/referencia' | '/licao/$id'
-  id: '__root__' | '/' | '/pratica' | '/referencia' | '/licao/$id'
+  to: '/' | '/auth' | '/pratica' | '/referencia' | '/licao/$id'
+  id: '__root__' | '/' | '/auth' | '/pratica' | '/referencia' | '/licao/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   PraticaRoute: typeof PraticaRoute
   ReferenciaRoute: typeof ReferenciaRoute
   LicaoIdRoute: typeof LicaoIdRoute
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pratica': {
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   PraticaRoute: PraticaRoute,
   ReferenciaRoute: ReferenciaRoute,
   LicaoIdRoute: LicaoIdRoute,
@@ -111,13 +129,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
