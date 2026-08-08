@@ -8,6 +8,7 @@ import { SchemaExplorer } from "./SchemaExplorer";
 import { DbStatus } from "./DbStatus";
 import { ReseedButton } from "./ReseedButton";
 import { InstallButton } from "./InstallButton";
+import { AccountStatus } from "./AccountStatus";
 
 
 function LessonNav() {
